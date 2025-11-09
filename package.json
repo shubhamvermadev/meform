@@ -17,6 +17,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:generate": "npm run generate --workspace=@meform/db",
     "db:migrate": "npm run migrate --workspace=@meform/db",
+    "db:deploy": "npm run deploy --workspace=@meform/db",
     "db:seed": "npm run seed --workspace=@meform/db",
     "db:studio": "npm run studio --workspace=@meform/db",
     "prepare": "husky install"

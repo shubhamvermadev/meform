@@ -6,7 +6,7 @@
   "scripts": {
     "generate": "npx dotenv-cli -e ../../.env -- prisma generate",
     "migrate": "npx dotenv-cli -e ../../.env -- prisma migrate dev",
-    "migrate:deploy": "npx dotenv-cli -e ../../.env -- prisma migrate deploy",
+    "deploy": "npx dotenv-cli -e ../../.env -- prisma migrate deploy",
     "seed": "npx dotenv-cli -e ../../.env -- tsx src/seed.ts",
     "studio": "npx dotenv-cli -e ../../.env -- prisma studio",
     "typecheck": "tsc --noEmit"

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { ROUTES, UI_LABELS } from "@meform/config";
 import { Button } from "@meform/ui";
-import { FiLink, FiFileText, FiCode, FiMessageSquare } from "react-icons/fi";
+import { FiLink, FiFileText, FiCode, FiMessageSquare, FiSettings } from "react-icons/fi";
 import { useApplications } from "@/hooks/use-applications";
 import { AppProvider, useAppContext } from "@/contexts/AppContext";
 import { ApplicationCreateDialog } from "./applications/ApplicationCreateDialog";
@@ -14,18 +15,19 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const menuItems = [
-  { path: ROUTES.DASHBOARD.URLS, label: "URL", icon: FiLink },
-  { path: ROUTES.DASHBOARD.FORMS, label: "Forms", icon: FiFileText },
-  { path: ROUTES.DASHBOARD.SCRIPTS, label: "Scripts", icon: FiCode },
-  { path: ROUTES.DASHBOARD.RESPONSES, label: "Visitor Responses", icon: FiMessageSquare },
-];
-
 function DashboardLayoutInner({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { data: applications = [] } = useApplications();
   const { selectedAppId, setSelectedAppId } = useAppContext();
+
+  const menuItems = [
+    { path: ROUTES.DASHBOARD.URLS, label: "URL", icon: FiLink },
+    { path: ROUTES.DASHBOARD.FORMS, label: "Forms", icon: FiFileText },
+    { path: ROUTES.DASHBOARD.SCRIPTS, label: "Scripts", icon: FiCode },
+    { path: ROUTES.DASHBOARD.RESPONSES, label: "Visitor Responses", icon: FiMessageSquare },
+    { path: ROUTES.DASHBOARD.SETTINGS, label: "Settings", icon: FiSettings },
+  ];
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -63,7 +65,7 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
           <Button variant="secondary" size="sm" onClick={() => setIsCreateDialogOpen(true)}>
             {UI_LABELS.CREATE_APPLICATION}
           </Button>
-          <Button variant="secondary" size="sm" onClick={handleLogout}>
+          <Button variant="danger" size="sm" onClick={handleLogout}>
             Logout
           </Button>
         </div>
@@ -76,8 +78,11 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.path;
+              if (!selectedAppId && item.path.includes("settings")) {
+                return null; // Hide settings if no app selected
+              }
               return (
-                <a
+                <Link
                   key={item.path}
                   href={item.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
@@ -88,7 +93,7 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.label}</span>
-                </a>
+                </Link>
               );
             })}
           </nav>

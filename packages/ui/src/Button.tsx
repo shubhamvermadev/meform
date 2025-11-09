@@ -2,7 +2,7 @@ import React from "react";
 import { PALETTE } from "@meform/config";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "danger";
+  variant?: "primary" | "secondary" | "danger" | "iconButton";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
 }
@@ -23,15 +23,16 @@ export const Button: React.FC<ButtonProps> = ({
     "font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variantStyles = {
-    primary: `bg-[${PALETTE.accent}] hover:bg-[${PALETTE.accentSoft}] focus:ring-[${PALETTE.accent}]`,
-    secondary: `bg-[${PALETTE.info}] hover:opacity-90 focus:ring-[${PALETTE.info}]`,
-    danger: `bg-red-600 hover:bg-red-700 focus:ring-red-600`,
+    primary: "bg-[#ff4000] hover:bg-[#faaa8d] text-white focus:ring-[#ff4000]",
+    secondary: "bg-[#50b2c0] hover:bg-[#3a9fb0] text-white focus:ring-[#50b2c0]",
+    danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-600",
+    iconButton: "bg-transparent hover:bg-gray-100 text-gray-700 focus:ring-gray-300 rounded-md",
   };
 
   const sizeStyles = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-2 text-base",
-    lg: "px-6 py-3 text-lg",
+    sm: variant === "iconButton" ? "p-1.5" : "px-3 py-1.5 text-sm",
+    md: variant === "iconButton" ? "p-2" : "px-4 py-2 text-base",
+    lg: variant === "iconButton" ? "p-3" : "px-6 py-3 text-lg",
   };
 
   return (

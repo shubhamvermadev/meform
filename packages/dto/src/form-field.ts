@@ -12,6 +12,7 @@ const FieldTypeEnum = z.enum([
   FIELD_TYPES.PHONE,
   FIELD_TYPES.NUMBER,
   FIELD_TYPES.CHECKBOX,
+  FIELD_TYPES.RADIO,
 ]);
 
 // Create Form Field
@@ -21,7 +22,7 @@ export const CreateFormFieldRequestSchema = z.object({
   type: FieldTypeEnum,
   required: z.boolean().default(false),
   placeholder: z.string().max(200).optional().nullable(),
-  options: z.record(z.unknown()).optional().nullable(), // JSON for checkbox list, etc.
+  options: z.record(z.unknown()).optional().nullable(), // JSON for checkbox, radio list, etc.
   position: z.number().int().min(0).default(0),
 });
 

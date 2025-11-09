@@ -37,7 +37,15 @@ export async function GET(
       return errorResponse(ERROR_CODES.RESOURCE_NOT_FOUND, "Application not found", 404);
     }
 
-    const response = ApplicationResponseSchema.parse(application);
+    const response = ApplicationResponseSchema.parse({
+      id: application.id,
+      name: application.name,
+      hostname: application.hostname,
+      description: application.description,
+      status: application.status,
+      createdAt: application.createdAt.toISOString(),
+      updatedAt: application.updatedAt.toISOString(),
+    });
     return successResponse(response);
   } catch (error) {
     logger.error("Get application error", error);
@@ -81,7 +89,15 @@ export async function PATCH(
 
     logger.info("Application updated", { applicationId: appId });
 
-    const response = ApplicationResponseSchema.parse(application);
+    const response = ApplicationResponseSchema.parse({
+      id: application.id,
+      name: application.name,
+      hostname: application.hostname,
+      description: application.description,
+      status: application.status,
+      createdAt: application.createdAt.toISOString(),
+      updatedAt: application.updatedAt.toISOString(),
+    });
     return successResponse(response);
   } catch (error) {
     logger.error("Update application error", error);
@@ -91,10 +107,10 @@ export async function PATCH(
 
 /**
  * DELETE /api/v1/applications/:appId
- * Soft delete application
+ * Delete application (soft delete by default, hard delete with ?hard=true)
  */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ appId: string }> }
 ) {
   const requestId = nanoid();
@@ -108,14 +124,39 @@ export async function DELETE(
     const ownership = await requireApplicationOwnership(appId, auth.user.id);
     if (ownership.error) return ownership.error;
 
-    await prisma.application.update({
-      where: { id: appId },
-      data: { deletedAt: new Date() },
-    });
+    const searchParams = request.nextUrl.searchParams;
+    const hardDelete = searchParams.get("hard") === "true";
 
-    logger.info("Application deleted", { applicationId: appId });
+    if (!hardDelete) {
+      return errorResponse(ERROR_CODES.VALIDATION_ERROR, "hard=true parameter is required", 400);
+    }
 
-    return successResponse({ success: true });
+    // Hard delete with cascade
+    await prisma.$transaction(async (tx) => {
+        // Delete in order to respect foreign key constraints
+        await tx.googleSheetsIntegration.deleteMany({
+          where: { form: { applicationId: appId } },
+        });
+        await tx.formField.deleteMany({
+          where: { form: { applicationId: appId } },
+        });
+        await tx.submission.deleteMany({
+          where: { applicationId: appId },
+        });
+        await tx.form.deleteMany({
+          where: { applicationId: appId },
+        });
+        await tx.urlRule.deleteMany({
+          where: { applicationId: appId },
+        });
+        await tx.application.delete({
+          where: { id: appId },
+        });
+      });
+
+      logger.info("Application hard deleted", { applicationId: appId });
+
+    return successResponse({ success: true }, 204);
   } catch (error) {
     logger.error("Delete application error", error);
     return errorResponse(ERROR_CODES.INTERNAL_ERROR, "Internal server error", 500);

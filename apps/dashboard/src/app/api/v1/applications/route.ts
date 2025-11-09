@@ -38,6 +38,7 @@ export async function GET() {
       name: app.name,
       hostname: app.hostname,
       description: app.description,
+      status: app.status,
       createdAt: app.createdAt.toISOString(),
       updatedAt: app.updatedAt.toISOString(),
     }));
@@ -97,6 +98,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate integration secret
+    const { randomBytes } = await import("crypto");
+    const integrationSecret = randomBytes(32).toString("hex");
+
     // Create application
     const application = await prisma.application.create({
       data: {
@@ -104,6 +109,7 @@ export async function POST(request: NextRequest) {
         name: validated.data.name,
         hostname: normalizedHostname,
         description: validated.data.description || null,
+        integrationSecret,
       },
     });
 
@@ -128,6 +134,7 @@ export async function POST(request: NextRequest) {
       name: application.name,
       hostname: application.hostname,
       description: application.description,
+      status: application.status,
       createdAt: application.createdAt.toISOString(),
       updatedAt: application.updatedAt.toISOString(),
     });

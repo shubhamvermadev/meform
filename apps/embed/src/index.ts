@@ -25,13 +25,18 @@ interface FormField {
 }
 
 interface Form {
-  id: string;
+  formId: string;
   name: string;
+  renderAsSection: boolean;
+  computedSectionId: string;
+  canRenderWidget: boolean;
   fields: FormField[];
 }
 
 interface ConfigResponse {
-  forms: Form[];
+  applicationStatus: string;
+  widgetAllowed: boolean;
+  matches: Form[];
 }
 
 class MeformWidget {
@@ -41,6 +46,7 @@ class MeformWidget {
   private container: HTMLElement | null = null;
   private isOpen = false;
   private currentForm: Form | null = null;
+  private widgetSuppressed = false;
 
   constructor(applicationId: string, baseUrl = "") {
     this.applicationId = applicationId;
@@ -56,16 +62,80 @@ class MeformWidget {
 
     try {
       const config = await this.fetchConfig(hostname, path);
-      if (config.forms.length === 0) {
+      
+      // Validate config structure
+      if (!config || typeof config !== "object") {
+        console.error("meform: Invalid config response");
+        return;
+      }
+
+      // Check application status
+      if (config.applicationStatus === "DISABLED" || !config.widgetAllowed) {
+        return; // Application is disabled
+      }
+
+      // Ensure matches exists and is an array
+      if (!config.matches || !Array.isArray(config.matches)) {
+        console.error("meform: Config missing matches array");
+        return;
+      }
+
+      if (config.matches.length === 0) {
         return; // No forms to show
       }
 
-      // Use first matching form
-      this.currentForm = config.forms[0];
-      this.renderButton();
+      // Process forms for section rendering
+      for (const form of config.matches) {
+        if (form.renderAsSection) {
+          const container = this.findSectionContainer(form);
+          if (container) {
+            this.renderSection(container, form);
+            this.widgetSuppressed = true;
+          }
+        }
+      }
+
+      // Render widget if allowed and no sections were rendered
+      if (!this.widgetSuppressed) {
+        // Find first form that allows widget rendering
+        const widgetForm = config.matches.find((f) => f.canRenderWidget);
+        if (widgetForm) {
+          this.currentForm = widgetForm;
+          this.renderButton();
+        }
+      } else {
+        // Use first form for section rendering context
+        this.currentForm = config.matches[0];
+      }
     } catch (error) {
       console.error("meform: Failed to load config", error);
     }
+  }
+
+  /**
+   * Finds the container element for section rendering
+   */
+  private findSectionContainer(form: Form): HTMLElement | null {
+    // Priority 1: ID match
+    const byId = document.getElementById(form.computedSectionId);
+    if (byId) return byId;
+
+    // Priority 2: Data attribute match
+    const byDataAttr = document.querySelector(
+      `[data-meform="app:${this.applicationId};form:${form.formId}"]`
+    ) as HTMLElement;
+    if (byDataAttr) return byDataAttr;
+
+    return null;
+  }
+
+  /**
+   * Renders form inline in a section container
+   */
+  private renderSection(container: HTMLElement, form: Form): void {
+    // For sections, render directly into the container (no shadow DOM for full-width)
+    this.currentForm = form;
+    this.renderSectionContent(container, form);
   }
 
   /**
@@ -75,18 +145,35 @@ class MeformWidget {
     const url = new URL("/public/v1/config", this.baseUrl);
     url.searchParams.set("applicationId", this.applicationId);
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        "X-Hostname": hostname,
-        "X-Path": path,
-      },
-    });
+    try {
+      const response = await fetch(url.toString(), {
+        headers: {
+          "X-Hostname": hostname,
+          "X-Path": path,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch config: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        console.error("meform: Config fetch failed", {
+          status: response.status,
+          statusText: response.statusText,
+          url: url.toString(),
+          errorText,
+        });
+        throw new Error(`Failed to fetch config: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("meform: Config fetch error", {
+        url: url.toString(),
+        baseUrl: this.baseUrl,
+        applicationId: this.applicationId,
+        error,
+      });
+      throw error;
     }
-
-    return response.json();
   }
 
   /**
@@ -167,7 +254,14 @@ class MeformWidget {
     this.container = document.createElement("div");
     this.container.id = "meform-popup";
     this.shadowRoot = this.container.attachShadow({ mode: "closed" });
+    this.renderFormContent(this.shadowRoot, this.currentForm);
+    document.body.appendChild(this.container);
+  }
 
+  /**
+   * Renders form content in a shadow root (for popup widget)
+   */
+  private renderFormContent(shadowRoot: ShadowRoot, form: Form): void {
     const styles = `
       :host {
         position: fixed;
@@ -179,7 +273,6 @@ class MeformWidget {
         border-radius: 8px;
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         z-index: 10001;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
       }
@@ -252,12 +345,12 @@ class MeformWidget {
     const formHTML = `
       <style>${styles}</style>
       <div class="header">
-        <h3 style="margin: 0;">${this.currentForm.name}</h3>
+        <h3 style="margin: 0;">${form.name}</h3>
         <button class="close-btn" id="close-btn">×</button>
       </div>
       <div class="content">
         <form id="meform-form">
-          ${this.currentForm.fields
+          ${form.fields
             .map(
               (field) => `
             <div class="field">
@@ -272,24 +365,230 @@ class MeformWidget {
       </div>
     `;
 
-    this.shadowRoot.innerHTML = formHTML;
+    shadowRoot.innerHTML = formHTML;
 
     // Attach event listeners
-    const closeBtn = this.shadowRoot.querySelector("#close-btn");
+    const closeBtn = shadowRoot.querySelector("#close-btn");
     if (closeBtn) {
       closeBtn.addEventListener("click", () => this.close());
     }
 
-    const form = this.shadowRoot.querySelector("#meform-form") as HTMLFormElement;
-    if (form) {
-      form.addEventListener("submit", (e) => this.handleSubmit(e));
+    const formElement = shadowRoot.querySelector("#meform-form") as HTMLFormElement;
+    if (formElement) {
+      formElement.addEventListener("submit", (e) => this.handleSubmit(e));
     }
-
-    document.body.appendChild(this.container);
   }
 
   /**
-   * Renders field input based on type
+   * Renders form as a full-width section (no shadow DOM)
+   */
+  private renderSectionContent(container: HTMLElement, form: Form): void {
+    const styleId = "meform-section-styles";
+    
+    // Add styles to document head if not already present
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.textContent = `
+        .meform-section {
+          width: 100%;
+          display: block;
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          margin: 0;
+          padding: 0;
+        }
+        .meform-section .meform-wrapper {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 40px 20px;
+        }
+        .meform-section .meform-inner {
+          width: 100%;
+          max-width: 500px;
+        }
+        .meform-section .meform-header {
+          text-align: center;
+          margin-bottom: 32px;
+        }
+        .meform-section .meform-header h3 {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 600;
+          color: ${PALETTE.dark};
+        }
+        .meform-section .meform-content {
+          width: 100%;
+        }
+        .meform-section .meform-field {
+          margin-bottom: 20px;
+        }
+        .meform-section .meform-field label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 500;
+          color: ${PALETTE.dark};
+          font-size: 14px;
+        }
+        .meform-section .meform-field input,
+        .meform-section .meform-field textarea,
+        .meform-section .meform-field select {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 14px;
+          box-sizing: border-box;
+          font-family: inherit;
+        }
+        .meform-section .meform-field textarea {
+          min-height: 100px;
+          resize: vertical;
+        }
+        .meform-section .meform-submit-btn {
+          width: 100%;
+          padding: 14px;
+          background: #3b82f6;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-size: 16px;
+          font-weight: 500;
+          cursor: pointer;
+          margin-top: 8px;
+          transition: background 0.2s, opacity 0.2s;
+        }
+        .meform-section .meform-submit-btn:hover:not(:disabled) {
+          background: #2563eb;
+        }
+        .meform-section .meform-submit-btn:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+        .meform-section .meform-error {
+          color: red;
+          font-size: 12px;
+          margin-top: 4px;
+        }
+        .meform-section .meform-checkbox-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .meform-section .meform-checkbox-item {
+          display: flex;
+          align-items: center;
+        }
+        .meform-section .meform-checkbox-item input[type="checkbox"] {
+          width: auto;
+          margin-right: 8px;
+        }
+        .meform-section .meform-radio-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .meform-section .meform-radio-item {
+          display: flex;
+          align-items: center;
+        }
+        .meform-section .meform-radio-item input[type="radio"] {
+          width: auto;
+          margin-right: 8px;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const formHTML = `
+      <div class="meform-wrapper">
+        <div class="meform-inner">
+          <div class="meform-header">
+            <h3>${form.name}</h3>
+          </div>
+          <div class="meform-content">
+            <form class="meform-form" id="meform-section-form-${form.formId}">
+              ${form.fields
+                .map(
+                  (field) => `
+                <div class="meform-field">
+                  <label>${field.name}${field.required ? " *" : ""}</label>
+                  ${this.renderFieldInputForSection(field)}
+                </div>
+              `
+                )
+                .join("")}
+              <button type="submit" class="meform-submit-btn" id="meform-submit-btn-${form.formId}" disabled>Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = formHTML;
+    container.classList.add("meform-section");
+
+    // Attach event listeners
+    const formElement = container.querySelector(`#meform-section-form-${form.formId}`) as HTMLFormElement;
+    const submitButton = container.querySelector(`#meform-submit-btn-${form.formId}`) as HTMLButtonElement;
+    
+    if (formElement && submitButton) {
+      // Validate form on input/change to enable/disable submit button
+      const validateForm = () => {
+        const formData = new FormData(formElement);
+        let allRequiredFilled = true;
+
+        for (const field of form.fields) {
+          if (field.required) {
+            const value = formData.get(field.key);
+            if (field.type === "CHECKBOX") {
+              // For checkboxes, check if at least one is checked
+              const checkboxes = formElement.querySelectorAll(`input[name="${field.key}"]:checked`);
+              if (checkboxes.length === 0) {
+                allRequiredFilled = false;
+                break;
+              }
+            } else if (field.type === "RADIO") {
+              // For radio buttons, check if one is selected
+              const radios = formElement.querySelectorAll(`input[name="${field.key}"]:checked`);
+              if (radios.length === 0) {
+                allRequiredFilled = false;
+                break;
+              }
+            } else {
+              if (!value || (typeof value === "string" && value.trim() === "")) {
+                allRequiredFilled = false;
+                break;
+              }
+            }
+          }
+        }
+
+        submitButton.disabled = !allRequiredFilled;
+      };
+
+      // Add event listeners to all form inputs
+      const inputs = formElement.querySelectorAll("input, textarea, select");
+      inputs.forEach((input) => {
+        input.addEventListener("input", validateForm);
+        input.addEventListener("change", validateForm);
+      });
+
+      // Initial validation
+      validateForm();
+
+      // Handle form submission
+      formElement.addEventListener("submit", (e) => this.handleSectionSubmit(e, form));
+    }
+  }
+
+  /**
+   * Renders field input based on type (for popup widget)
    */
   private renderFieldInput(field: FormField): string {
     switch (field.type) {
@@ -303,13 +602,37 @@ class MeformWidget {
         return `<input type="number" name="${field.key}" placeholder="${field.placeholder || ""}" ${field.required ? "required" : ""} />`;
       case "CHECKBOX":
         return this.renderCheckbox(field);
+      case "RADIO":
+        return this.renderRadio(field);
       default:
         return `<input type="text" name="${field.key}" placeholder="${field.placeholder || ""}" ${field.required ? "required" : ""} />`;
     }
   }
 
   /**
-   * Renders checkbox field
+   * Renders field input based on type (for full-width section)
+   */
+  private renderFieldInputForSection(field: FormField): string {
+    switch (field.type) {
+      case "TEXTAREA":
+        return `<textarea name="${field.key}" placeholder="${field.placeholder || ""}" ${field.required ? "required" : ""}></textarea>`;
+      case "EMAIL":
+        return `<input type="email" name="${field.key}" placeholder="${field.placeholder || ""}" ${field.required ? "required" : ""} />`;
+      case "PHONE":
+        return `<input type="tel" name="${field.key}" placeholder="${field.placeholder || ""}" ${field.required ? "required" : ""} />`;
+      case "NUMBER":
+        return `<input type="number" name="${field.key}" placeholder="${field.placeholder || ""}" ${field.required ? "required" : ""} />`;
+      case "CHECKBOX":
+        return this.renderCheckboxForSection(field);
+      case "RADIO":
+        return this.renderRadioForSection(field);
+      default:
+        return `<input type="text" name="${field.key}" placeholder="${field.placeholder || ""}" ${field.required ? "required" : ""} />`;
+    }
+  }
+
+  /**
+   * Renders checkbox field (for popup widget)
    */
   private renderCheckbox(field: FormField): string {
     const options = field.options as Record<string, string> | null;
@@ -330,7 +653,74 @@ class MeformWidget {
   }
 
   /**
-   * Handles form submission
+   * Renders checkbox field (for full-width section)
+   */
+  private renderCheckboxForSection(field: FormField): string {
+    const options = field.options as Record<string, string> | null;
+    if (!options) {
+      return `<input type="checkbox" name="${field.key}" ${field.required ? "required" : ""} />`;
+    }
+
+    return `<div class="meform-checkbox-group">
+      ${Object.entries(options)
+        .map(
+          ([value, label]) => `
+        <div class="meform-checkbox-item">
+          <input type="checkbox" name="${field.key}" value="${value}" />
+          <label>${label}</label>
+        </div>
+      `
+        )
+        .join("")}
+    </div>`;
+  }
+
+  /**
+   * Renders radio field (for popup widget)
+   */
+  private renderRadio(field: FormField): string {
+    const options = field.options as Record<string, string> | null;
+    if (!options) {
+      return `<input type="radio" name="${field.key}" value="yes" ${field.required ? "required" : ""} />`;
+    }
+
+    return Object.entries(options)
+      .map(
+        ([value, label]) => `
+      <label style="display: flex; align-items: center; margin-bottom: 8px;">
+        <input type="radio" name="${field.key}" value="${value}" style="width: auto; margin-right: 8px;" ${field.required ? "required" : ""} />
+        ${label}
+      </label>
+    `
+      )
+      .join("");
+  }
+
+  /**
+   * Renders radio field (for full-width section)
+   */
+  private renderRadioForSection(field: FormField): string {
+    const options = field.options as Record<string, string> | null;
+    if (!options) {
+      return `<input type="radio" name="${field.key}" value="yes" ${field.required ? "required" : ""} />`;
+    }
+
+    return `<div class="meform-radio-group">
+      ${Object.entries(options)
+        .map(
+          ([value, label]) => `
+        <div class="meform-radio-item">
+          <input type="radio" name="${field.key}" value="${value}" id="${field.key}-${value}" ${field.required ? "required" : ""} />
+          <label for="${field.key}-${value}">${label}</label>
+        </div>
+      `
+        )
+        .join("")}
+    </div>`;
+  }
+
+  /**
+   * Handles form submission (for popup widget)
    */
   private async handleSubmit(e: Event): Promise<void> {
     e.preventDefault();
@@ -375,7 +765,7 @@ class MeformWidget {
         },
         body: JSON.stringify({
           applicationId: this.applicationId,
-          formId: this.currentForm.id,
+          formId: this.currentForm.formId,
           hostname: window.location.hostname,
           path: window.location.pathname,
           payload,
@@ -383,14 +773,81 @@ class MeformWidget {
       });
 
       if (!response.ok) {
-        throw new Error("Submission failed");
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || "Submission failed");
       }
 
       alert("Thank you! Your submission has been received.");
       this.close();
     } catch (error) {
       console.error("meform: Submission error", error);
-      alert("An error occurred. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "An error occurred. Please try again.";
+      alert(errorMessage);
+    }
+  }
+
+  /**
+   * Handles form submission (for full-width section)
+   */
+  private async handleSectionSubmit(e: Event, form: Form): Promise<void> {
+    e.preventDefault();
+
+    const formElement = e.target as HTMLFormElement;
+    const formData = new FormData(formElement);
+    const payload: Record<string, unknown> = {};
+
+    // Collect form data
+    formData.forEach((value, key) => {
+      if (formData.getAll(key).length > 1) {
+        // Multiple values (checkboxes)
+        payload[key] = formData.getAll(key);
+      } else {
+        payload[key] = value;
+      }
+    });
+
+    // Validate required fields
+    const errors: string[] = [];
+    for (const field of form.fields) {
+      if (field.required && !payload[field.key]) {
+        errors.push(`${field.name} is required`);
+      }
+    }
+
+    if (errors.length > 0) {
+      alert(errors.join("\n"));
+      return;
+    }
+
+    // Submit
+    try {
+      const submitUrl = new URL("/public/v1/submit", this.baseUrl);
+      const response = await fetch(submitUrl.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          applicationId: this.applicationId,
+          formId: form.formId,
+          hostname: window.location.hostname,
+          path: window.location.pathname,
+          payload,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || "Submission failed");
+      }
+
+      alert("Thank you! Your submission has been received.");
+      // Reset form
+      formElement.reset();
+    } catch (error) {
+      console.error("meform: Submission error", error);
+      const errorMessage = error instanceof Error ? error.message : "An error occurred. Please try again.";
+      alert(errorMessage);
     }
   }
 

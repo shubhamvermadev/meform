@@ -8,7 +8,7 @@ import {
   PublicConfigResponseSchema,
   ERROR_CODES,
 } from "@meform/dto";
-import { matchesPathPattern, normalizeHostname } from "@meform/utils";
+import { matchesPathPattern, normalizeHostname, buildSectionId } from "@meform/utils";
 import { nanoid } from "nanoid";
 
 /**
@@ -82,6 +82,10 @@ export async function GET(request: NextRequest) {
       return addCorsHeaders(errorResponse(ERROR_CODES.RESOURCE_NOT_FOUND, "Application not found", 404));
     }
 
+    // Check if application is disabled or deleted
+    if (application.status === "DISABLED" || application.deletedAt) {
+      return addCorsHeaders(errorResponse(ERROR_CODES.RESOURCE_ACCESS_DENIED, "Application is disabled", 403));
+    }
 
     // Find matching forms based on URL rules
     const matchingForms = application.forms.filter((form) => {
@@ -111,20 +115,32 @@ export async function GET(request: NextRequest) {
       return false;
     });
 
+    const widgetAllowed = application.status === "ACTIVE" && !application.deletedAt;
+    
     const response = PublicConfigResponseSchema.parse({
-      forms: matchingForms.map((form) => ({
-        id: form.id,
-        name: form.name,
-        fields: form.fields.map((field) => ({
-          id: field.id,
-          name: field.name,
-          key: field.key,
-          type: field.type,
-          required: field.required,
-          placeholder: field.placeholder,
-          options: field.options,
-        })),
-      })),
+      applicationStatus: application.status,
+      widgetAllowed,
+      matches: matchingForms.map((form) => {
+        const computedSectionId = form.sectionIdOverride || buildSectionId(application.id, form.name);
+        const canRenderWidget = !form.renderAsSection || form.sharePublicly;
+        
+        return {
+          formId: form.id,
+          name: form.name,
+          renderAsSection: form.renderAsSection,
+          computedSectionId,
+          canRenderWidget,
+          fields: form.fields.map((field) => ({
+            id: field.id,
+            name: field.name,
+            key: field.key,
+            type: field.type,
+            required: field.required,
+            placeholder: field.placeholder,
+            options: field.options,
+          })),
+        };
+      }),
     });
 
     return addCorsHeaders(successResponse(response));

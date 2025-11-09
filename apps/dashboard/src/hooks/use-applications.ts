@@ -5,6 +5,8 @@ import type {
   ApplicationResponse,
   CreateApplicationRequest,
   UpdateApplicationRequest,
+  UpdateApplicationStatusRequest,
+  ApplicationSecretResponse,
 } from "@meform/dto";
 
 const queryKeys = {
@@ -59,8 +61,12 @@ async function updateApplication(
   return res.json();
 }
 
-async function deleteApplication(appId: string): Promise<void> {
-  const res = await fetch(ROUTES.API.APPLICATION(appId), {
+async function deleteApplication(appId: string, hard: boolean = false): Promise<void> {
+  const url = new URL(ROUTES.API.APPLICATION(appId), window.location.origin);
+  if (hard) {
+    url.searchParams.set("hard", "true");
+  }
+  const res = await fetch(url.toString(), {
     method: "DELETE",
     credentials: "include",
   });
@@ -74,6 +80,8 @@ export function useApplications() {
   return useQuery({
     queryKey: queryKeys.list(),
     queryFn: fetchApplications,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 }
 
@@ -110,10 +118,88 @@ export function useUpdateApplication() {
 export function useDeleteApplication() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteApplication,
+    mutationFn: ({ appId, hard }: { appId: string; hard?: boolean }) => deleteApplication(appId, hard),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.list() });
-      toast.success(UI_LABELS.APP_DELETED);
+      toast.success(UI_LABELS.APP_DELETE_SUCCESS);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || UI_LABELS.APP_DELETE_ERROR);
+    },
+  });
+}
+
+async function updateApplicationStatus(
+  appId: string,
+  status: "ACTIVE" | "DISABLED"
+): Promise<ApplicationResponse> {
+  const res = await fetch(`${ROUTES.API.APPLICATION(appId)}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Failed to update application status");
+  }
+  return res.json();
+}
+
+async function fetchApplicationSecret(appId: string): Promise<ApplicationSecretResponse> {
+  const res = await fetch(`${ROUTES.API.APPLICATION(appId)}/secret`, {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch application secret");
+  }
+  return res.json();
+}
+
+async function rotateApplicationSecret(appId: string): Promise<ApplicationSecretResponse> {
+  const res = await fetch(`${ROUTES.API.APPLICATION(appId)}/secret/rotate`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Failed to rotate application secret");
+  }
+  return res.json();
+}
+
+export function useUpdateApplicationStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ appId, status }: { appId: string; status: "ACTIVE" | "DISABLED" }) =>
+      updateApplicationStatus(appId, status),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.detail(variables.appId) });
+      // Also invalidate the query used in settings page
+      queryClient.invalidateQueries({ queryKey: ["app", variables.appId] });
+      toast.success(UI_LABELS.APP_STATUS_UPDATED);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useApplicationSecret(appId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.detail(appId), "secret"],
+    queryFn: () => fetchApplicationSecret(appId),
+    enabled: !!appId,
+  });
+}
+
+export function useRotateApplicationSecret(appId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => rotateApplicationSecret(appId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.detail(appId), "secret"] });
     },
     onError: (error: Error) => {
       toast.error(error.message);

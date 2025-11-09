@@ -5,6 +5,7 @@ import { Card, Button } from "@meform/ui";
 import { ROUTES, UI_LABELS, UI_DESCRIPTIONS } from "@meform/config";
 import { useAppContext } from "@/contexts/AppContext";
 import toast from "react-hot-toast";
+import { FiCopy, FiCheck } from "react-icons/fi";
 
 export default function ScriptsPage() {
   const { selectedAppId } = useAppContext();
@@ -35,10 +36,26 @@ export default function ScriptsPage() {
         <p className="text-gray-600">
           Add this script tag to your website to enable the meform widget.
         </p>
-        <div className="bg-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+        <div className="bg-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto relative">
           <pre className="whitespace-pre-wrap">{scriptTag}</pre>
         </div>
-        <Button onClick={handleCopy}>{copied ? UI_LABELS.COPIED : UI_LABELS.COPY}</Button>
+        <Button 
+          onClick={handleCopy}
+          variant="primary"
+          className="flex items-center gap-2"
+        >
+          {copied ? (
+            <>
+              <FiCheck className="w-4 h-4" />
+              <span>{UI_LABELS.COPIED}</span>
+            </>
+          ) : (
+            <>
+              <FiCopy className="w-4 h-4" />
+              <span>{UI_LABELS.COPY}</span>
+            </>
+          )}
+        </Button>
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
           <h3 className="font-semibold mb-2">How it works:</h3>
           <p className="text-sm text-gray-700 mb-2">{UI_DESCRIPTIONS.SCRIPT_EXPLANATION}</p>

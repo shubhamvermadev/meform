@@ -31,10 +31,15 @@ export const PublicConfigQuerySchema = z.object({
 export type PublicConfigQuery = z.infer<typeof PublicConfigQuerySchema>;
 
 export const PublicConfigResponseSchema = z.object({
-  forms: z.array(
+  applicationStatus: z.enum(["ACTIVE", "DISABLED"]),
+  widgetAllowed: z.boolean(),
+  matches: z.array(
     z.object({
-      id: z.string(),
+      formId: z.string(),
       name: z.string(),
+      renderAsSection: z.boolean(),
+      computedSectionId: z.string(),
+      canRenderWidget: z.boolean(),
       fields: z.array(
         z.object({
           id: z.string(),
@@ -70,6 +75,9 @@ export const SubmissionResponseSchema = z.object({
   hostname: z.string(),
   path: z.string(),
   payload: z.record(z.unknown()),
+  integrationStatus: z.string().nullable().optional(),
+  integrationAttemptCount: z.number().optional(),
+  integrationLastError: z.string().nullable().optional(),
   createdAt: z.date().or(z.string()),
 });
 

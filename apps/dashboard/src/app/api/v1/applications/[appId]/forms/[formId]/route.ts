@@ -8,6 +8,7 @@ import {
   FormResponseSchema,
   ERROR_CODES,
 } from "@meform/dto";
+import { buildSectionId } from "@meform/utils";
 import { nanoid } from "nanoid";
 
 /**
@@ -31,13 +32,39 @@ export async function GET(
 
     const form = await prisma.form.findUnique({
       where: { id: formId },
+      include: {
+        googleSheets: true,
+      },
     });
 
     if (!form || form.applicationId !== appId) {
       return errorResponse(ERROR_CODES.RESOURCE_NOT_FOUND, "Form not found", 404);
     }
 
-    const response = FormResponseSchema.parse(form);
+    const computedSectionId = form.sectionIdOverride || buildSectionId(appId, form.name);
+
+    const response = FormResponseSchema.parse({
+      id: form.id,
+      applicationId: form.applicationId,
+      name: form.name,
+      urlRuleId: form.urlRuleId,
+      version: form.version,
+      renderAsSection: form.renderAsSection,
+      sectionIdOverride: form.sectionIdOverride,
+      computedSectionId,
+      sharePublicly: form.sharePublicly,
+      googleSheets: form.googleSheets
+        ? {
+            enabled: form.googleSheets.enabled,
+            sheetName: form.googleSheets.sheetName,
+            appScriptDeploymentId: form.googleSheets.appScriptDeploymentId,
+            webAppUrl: form.googleSheets.webAppUrl,
+          }
+        : null,
+      createdAt: form.createdAt,
+      updatedAt: form.updatedAt,
+      deletedAt: form.deletedAt,
+    });
     return successResponse(response);
   } catch (error) {
     logger.error("Get form error", error);
@@ -74,14 +101,52 @@ export async function PATCH(
       );
     }
 
+    const { googleSheets, ...formData } = validated.data;
+
+    // Update form and handle Google Sheets integration
     const form = await prisma.form.update({
       where: { id: formId },
-      data: validated.data,
+      data: {
+        ...formData,
+        googleSheets: googleSheets
+          ? {
+              upsert: {
+                create: {
+                  enabled: googleSheets.enabled,
+                  sheetName: googleSheets.sheetName || "",
+                  appScriptDeploymentId: googleSheets.appScriptDeploymentId || null,
+                  webAppUrl: googleSheets.webAppUrl || null,
+                },
+                update: {
+                  enabled: googleSheets.enabled,
+                  sheetName: googleSheets.sheetName || "",
+                  appScriptDeploymentId: googleSheets.appScriptDeploymentId || null,
+                  webAppUrl: googleSheets.webAppUrl || null,
+                },
+              },
+            }
+          : undefined,
+      },
     });
 
     logger.info("Form updated", { formId });
 
-    const response = FormResponseSchema.parse(form);
+    const computedSectionId = form.sectionIdOverride || buildSectionId(appId, form.name);
+
+    const response = FormResponseSchema.parse({
+      id: form.id,
+      applicationId: form.applicationId,
+      name: form.name,
+      urlRuleId: form.urlRuleId,
+      version: form.version,
+      renderAsSection: form.renderAsSection,
+      sectionIdOverride: form.sectionIdOverride,
+      computedSectionId,
+      sharePublicly: form.sharePublicly,
+      createdAt: form.createdAt,
+      updatedAt: form.updatedAt,
+      deletedAt: form.deletedAt,
+    });
     return successResponse(response);
   } catch (error) {
     logger.error("Update form error", error);

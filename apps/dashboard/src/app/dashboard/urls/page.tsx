@@ -9,6 +9,7 @@ import { CreateUrlRuleRequestSchema, UpdateUrlRuleRequestSchema } from "@meform/
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import type { z } from "zod";
+import { FiEdit, FiTrash2, FiPlus } from "react-icons/fi";
 
 type CreateUrlRuleForm = z.infer<typeof CreateUrlRuleRequestSchema>;
 type UpdateUrlRuleForm = z.infer<typeof UpdateUrlRuleRequestSchema>;
@@ -96,7 +97,14 @@ export default function UrlsPage() {
       <Card
         title={UI_LABELS.URL}
         headerActions={
-          <Button onClick={() => setIsAddModalOpen(true)}>{UI_LABELS.ADD_URL}</Button>
+          <Button 
+            onClick={() => setIsAddModalOpen(true)}
+            variant="primary"
+            className="flex items-center gap-2"
+          >
+            <FiPlus className="w-4 h-4" />
+            <span>{UI_LABELS.ADD_URL}</span>
+          </Button>
         }
       >
         {isLoading ? (
@@ -121,21 +129,28 @@ export default function UrlsPage() {
                     <td className="p-2">{rule.hostname}</td>
                     <td className="p-2">{rule.pathPattern}</td>
                     <td className="p-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="mr-2"
-                        onClick={() => handleEdit(rule)}
-                      >
-                        {UI_LABELS.EDIT}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => setDeletingRule({ id: rule.id, hostname: rule.hostname })}
-                      >
-                        {UI_LABELS.DELETE}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleEdit(rule)}
+                          title={UI_LABELS.EDIT}
+                          className="flex items-center gap-1.5"
+                        >
+                          <FiEdit className="w-4 h-4" />
+                          <span>{UI_LABELS.EDIT}</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => setDeletingRule({ id: rule.id, hostname: rule.hostname })}
+                          title={UI_LABELS.DELETE}
+                          className="flex items-center gap-1.5"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                          {/* <span>{UI_LABELS.DELETE}</span> */}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -140,7 +140,7 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -155,14 +155,16 @@ export const Modal: React.FC<ModalProps> = ({
               </p>
             )}
           </div>
-          <button
+          <Button
+            variant="iconButton"
+            size="sm"
             onClick={onClose}
             disabled={primaryAction?.isLoading}
-            className="ml-4 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#50b2c0] rounded"
+            className="ml-4"
             aria-label="Close"
           >
             <FiX className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -198,4 +200,6 @@ export const Modal: React.FC<ModalProps> = ({
 
   return createPortal(modalContent, document.body);
 };
+
+
 

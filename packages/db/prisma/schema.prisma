@@ -15,6 +15,12 @@ enum FieldType {
   PHONE
   NUMBER
   CHECKBOX
+  RADIO
+}
+
+enum ApplicationStatus {
+  ACTIVE
+  DISABLED
 }
 
 model User {
@@ -30,20 +36,22 @@ model User {
 }
 
 model Application {
-  id           String   @id @default(cuid())
-  ownerId      String
-  name         String
-  hostname     String   // website hostname (e.g. example.com)
-  description  String?
-  colorTheme   String?  // stored palette key if needed
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  deletedAt    DateTime?
+  id               String            @id @default(cuid())
+  ownerId          String
+  name             String
+  hostname         String            // website hostname (e.g. example.com)
+  description      String?
+  colorTheme       String?           // stored palette key if needed
+  status           ApplicationStatus @default(ACTIVE)
+  integrationSecret String          @default(cuid())
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
 
-  owner        User     @relation(fields: [ownerId], references: [id])
-  urlRules     UrlRule[]
-  forms        Form[]
-  submissions  Submission[]
+  owner            User              @relation(fields: [ownerId], references: [id])
+  urlRules         UrlRule[]
+  forms            Form[]
+  submissions      Submission[]
 
   @@unique([ownerId, name]) // app name unique per owner
   @@index([ownerId])
@@ -68,19 +76,23 @@ model UrlRule {
 }
 
 model Form {
-  id            String   @id @default(cuid())
-  applicationId String
-  name          String
-  urlRuleId     String? // optional; if null, form selectable in widget via rules logic
-  version       Int      @default(1)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  deletedAt     DateTime?
+  id                String   @id @default(cuid())
+  applicationId     String
+  name              String
+  urlRuleId         String?  // optional; if null, form selectable in widget via rules logic
+  version           Int      @default(1)
+  renderAsSection   Boolean  @default(false)
+  sectionIdOverride String?
+  sharePublicly     Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime?
 
-  application   Application @relation(fields: [applicationId], references: [id])
-  urlRule       UrlRule?    @relation(fields: [urlRuleId], references: [id])
-  fields        FormField[]
-  submissions   Submission[]
+  application       Application            @relation(fields: [applicationId], references: [id])
+  urlRule           UrlRule?               @relation(fields: [urlRuleId], references: [id])
+  fields            FormField[]
+  submissions       Submission[]
+  googleSheets      GoogleSheetsIntegration?
 
   @@index([applicationId])
   @@unique([applicationId, name, version])
@@ -95,7 +107,7 @@ model FormField {
   type       FieldType
   required   Boolean  @default(false)
   placeholder String?
-  options    Json?           // for CHECKBOX (list), future select, etc.
+  options    Json?           // for CHECKBOX, RADIO (list), future select, etc.
   position   Int      @default(0)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -110,19 +122,39 @@ model FormField {
 
 // Submission as a JSON document + denormalized helpers
 model Submission {
-  id            String   @id @default(cuid())
-  formId        String
-  applicationId String
-  hostname      String
-  path          String
-  payload       Json     // { key: value } at time of submission (version-safe)
-  createdAt     DateTime @default(now())
+  id                    String   @id @default(cuid())
+  formId                String
+  applicationId         String
+  hostname              String
+  path                  String
+  payload               Json     // { key: value } at time of submission (version-safe)
+  integrationStatus     String?
+  integrationAttemptCount Int    @default(0)
+  integrationLastError  String?
+  createdAt             DateTime @default(now())
 
-  form          Form        @relation(fields: [formId], references: [id])
-  application   Application @relation(fields: [applicationId], references: [id])
+  form                  Form        @relation(fields: [formId], references: [id])
+  application           Application @relation(fields: [applicationId], references: [id])
 
   @@index([formId])
   @@index([applicationId, createdAt])
   @@map("submissions")
+}
+
+model GoogleSheetsIntegration {
+  id                    String   @id @default(cuid())
+  formId                String   @unique
+  enabled               Boolean  @default(false)
+  sheetName             String?
+  appScriptDeploymentId String?
+  webAppUrl             String?
+  lastAttemptAt         DateTime?
+  lastError             String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  form                  Form      @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@map("google_sheets_integrations")
 }
 

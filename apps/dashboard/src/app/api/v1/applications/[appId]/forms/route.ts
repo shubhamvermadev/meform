@@ -9,6 +9,7 @@ import {
   FormResponseSchema,
   ERROR_CODES,
 } from "@meform/dto";
+import { buildSectionId } from "@meform/utils";
 import { nanoid } from "nanoid";
 
 /**
@@ -43,7 +44,21 @@ export async function GET(
       orderBy: { createdAt: "desc" },
     });
 
-    const response = ListFormsResponseSchema.parse(forms);
+    const response = ListFormsResponseSchema.parse(
+      forms.map((form) => ({
+        id: form.id,
+        applicationId: form.applicationId,
+        name: form.name,
+        urlRuleId: form.urlRuleId,
+        version: form.version,
+        renderAsSection: form.renderAsSection,
+        sectionIdOverride: form.sectionIdOverride,
+        sharePublicly: form.sharePublicly,
+        createdAt: form.createdAt,
+        updatedAt: form.updatedAt,
+        deletedAt: form.deletedAt,
+      }))
+    );
     return successResponse(response);
   } catch (error) {
     logger.error("List forms error", error);
@@ -80,16 +95,43 @@ export async function POST(
       );
     }
 
+    const { googleSheets, ...formData } = validated.data;
+
     const form = await prisma.form.create({
       data: {
         applicationId: appId,
-        ...validated.data,
+        ...formData,
+        googleSheets: googleSheets?.enabled
+          ? {
+              create: {
+                enabled: googleSheets.enabled,
+                sheetName: googleSheets.sheetName || "",
+                appScriptDeploymentId: googleSheets.appScriptDeploymentId || null,
+                webAppUrl: googleSheets.webAppUrl || null,
+              },
+            }
+          : undefined,
       },
     });
 
     logger.info("Form created", { formId: form.id });
 
-    const response = FormResponseSchema.parse(form);
+    const computedSectionId = form.sectionIdOverride || buildSectionId(appId, form.name);
+
+    const response = FormResponseSchema.parse({
+      id: form.id,
+      applicationId: form.applicationId,
+      name: form.name,
+      urlRuleId: form.urlRuleId,
+      version: form.version,
+      renderAsSection: form.renderAsSection,
+      sectionIdOverride: form.sectionIdOverride,
+      computedSectionId,
+      sharePublicly: form.sharePublicly,
+      createdAt: form.createdAt,
+      updatedAt: form.updatedAt,
+      deletedAt: form.deletedAt,
+    });
     return successResponse(response, 201);
   } catch (error) {
     logger.error("Create form error", error);

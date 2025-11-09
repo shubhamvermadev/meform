@@ -28,6 +28,7 @@ import type { z } from "zod";
 import { z as zod } from "zod";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@meform/config";
+import { FiEdit, FiTrash2, FiPlus, FiArrowLeft } from "react-icons/fi";
 import { slugify } from "@meform/utils";
 
 type CreateFieldForm = z.infer<typeof CreateFormFieldRequestSchema> & { options?: string };
@@ -102,18 +103,76 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
     }
   };
 
+  // const handleCreateSubmit = async (data: CreateFieldForm) => {
+  //   try {
+  //     // Parse options if type is CHECKBOX or RADIO
+  //     let parsedOptions: unknown = null;
+  //     if ((data.type === "CHECKBOX" || data.type === "RADIO") && data.options) {
+  //       try {
+  //         const optionsStr = String(data.options);
+  //         if (optionsStr.trim()) {
+  //           const parsed = JSON.parse(optionsStr);
+  //           // Convert array to object if needed (for user-friendly input)
+  //           if (Array.isArray(parsed)) {
+  //             parsedOptions = Object.fromEntries(
+  //               parsed.map((item, index) => {
+  //                 const value = typeof item === "string" ? item.toLowerCase().replace(/\s+/g, "_") : `option${index + 1}`;
+  //                 const label = typeof item === "string" ? item : String(item);
+  //                 return [value, label];
+  //               })
+  //             );
+  //           } else if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+  //             parsedOptions = parsed;
+  //           } else {
+  //             throw new Error("Options must be an array or object");
+  //           }
+  //         }
+  //       } catch (error) {
+  //         throw new Error(error instanceof Error ? error.message : "Invalid JSON in options field");
+  //       }
+  //     }
+  //     const submitData = {
+  //       ...data,
+  //       options: parsedOptions,
+  //     };
+  //     await createMutation.mutateAsync(submitData);
+  //     setIsAddModalOpen(false);
+  //     createForm.reset();
+  //   } catch (error) {
+  //     // Error handled by mutation
+  //   }
+  // };
+
+  // if not working check above method
   const handleCreateSubmit = async (data: CreateFieldForm) => {
     try {
-      // Parse options if type is CHECKBOX
+      // Parse options if type is CHECKBOX or RADIO
       let parsedOptions: unknown = null;
-      if (data.type === "CHECKBOX" && data.options) {
+      if ((data.type === "CHECKBOX" || data.type === "RADIO") && data.options) {
         try {
           const optionsStr = String(data.options);
           if (optionsStr.trim()) {
-            parsedOptions = JSON.parse(optionsStr);
+            const parsed = JSON.parse(optionsStr);
+            // Convert array to object if needed (for user-friendly input)
+            if (Array.isArray(parsed)) {
+              parsedOptions = Object.fromEntries(
+                parsed.map((item, index) => {
+                  const value =
+                    typeof item === "string"
+                      ? item.toLowerCase().replace(/\s+/g, "_")
+                      : `option${index + 1}`;
+                  const label = typeof item === "string" ? item : String(item);
+                  return [value, label];
+                })
+              );
+            } else if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+              parsedOptions = parsed;
+            } else {
+              throw new Error("Options must be an array or object");
+            }
           }
-        } catch {
-          throw new Error("Invalid JSON in options field");
+        } catch (error) {
+          throw new Error(error instanceof Error ? error.message : "Invalid JSON in options field");
         }
       }
       const submitData = {
@@ -142,7 +201,7 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
     updateForm.reset({
       name: field.name,
       key: field.key,
-      type: field.type as "TEXT" | "TEXTAREA" | "EMAIL" | "PHONE" | "NUMBER" | "CHECKBOX",
+      type: field.type as "TEXT" | "TEXTAREA" | "EMAIL" | "PHONE" | "NUMBER" | "CHECKBOX" | "RADIO",
       required: field.required,
       placeholder: field.placeholder || "",
       options: field.options ? JSON.stringify(field.options, null, 2) : "",
@@ -153,16 +212,33 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
   const handleUpdateSubmit = async (data: UpdateFieldForm) => {
     if (!editingField) return;
     try {
-      // Parse options if type is CHECKBOX
+      // Parse options if type is CHECKBOX or RADIO
       let parsedOptions: unknown = null;
-      if (data.type === "CHECKBOX" && data.options) {
+      if ((data.type === "CHECKBOX" || data.type === "RADIO") && data.options) {
         try {
           const optionsStr = String(data.options);
           if (optionsStr.trim()) {
-            parsedOptions = JSON.parse(optionsStr);
+            const parsed = JSON.parse(optionsStr);
+            // Convert array to object if needed (for user-friendly input)
+            if (Array.isArray(parsed)) {
+              parsedOptions = Object.fromEntries(
+                parsed.map((item, index) => {
+                  const value =
+                    typeof item === "string"
+                      ? item.toLowerCase().replace(/\s+/g, "_")
+                      : `option${index + 1}`;
+                  const label = typeof item === "string" ? item : String(item);
+                  return [value, label];
+                })
+              );
+            } else if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+              parsedOptions = parsed;
+            } else {
+              throw new Error("Options must be an array or object");
+            }
           }
-        } catch {
-          throw new Error("Invalid JSON in options field");
+        } catch (error) {
+          throw new Error(error instanceof Error ? error.message : "Invalid JSON in options field");
         }
       }
       const submitData = {
@@ -206,17 +282,25 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
         title={
           <div className="flex items-center gap-4">
             <Button
-              variant="secondary"
+              variant="iconButton"
               size="sm"
               onClick={() => router.push(ROUTES.DASHBOARD.FORMS)}
             >
-              {UI_LABELS.BACK}
+              <FiArrowLeft className="w-5 h-5" />
+              {/* {UI_LABELS.BACK} */}
             </Button>
             <span className="font-semibold">{form?.name}</span>
           </div>
         }
         headerActions={
-          <Button onClick={() => setIsAddModalOpen(true)}>{UI_LABELS.ADD_FIELD}</Button>
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            variant="primary"
+            className="flex items-center gap-2"
+          >
+            <FiPlus className="w-4 h-4" />
+            <span>{UI_LABELS.ADD_FIELD}</span>
+          </Button>
         }
       >
         {isLoading ? (
@@ -245,21 +329,28 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
                     <td className="p-2">{field.type}</td>
                     <td className="p-2">{field.required ? "Yes" : "No"}</td>
                     <td className="p-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="mr-2"
-                        onClick={() => handleEdit(field)}
-                      >
-                        {UI_LABELS.EDIT}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => setDeletingField({ id: field.id, name: field.name })}
-                      >
-                        {UI_LABELS.DELETE}
-                      </Button>
+                      <div className="flex items-center gap-4">
+                        <Button
+                          size="sm"
+                          variant="iconButton"
+                          onClick={() => handleEdit(field)}
+                          title={UI_LABELS.EDIT}
+                          className="flex items-center gap-1.5"
+                        >
+                          <FiEdit className="w-4 h-4" />
+                          {/* <span>{UI_LABELS.EDIT}</span> */}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => setDeletingField({ id: field.id, name: field.name })}
+                          title={UI_LABELS.DELETE}
+                          className="flex items-center gap-1.5"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                          {/* <span>{UI_LABELS.DELETE}</span> */}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -369,7 +460,8 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
                   />
                 )}
               />
-              {updateForm.watch("type") === "CHECKBOX" && (
+              {(updateForm.watch("type") === "CHECKBOX" ||
+                updateForm.watch("type") === "RADIO") && (
                 <Controller
                   name="options"
                   control={updateForm.control}
@@ -467,7 +559,8 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
                   />
                 )}
               />
-              {createForm.watch("type") === "CHECKBOX" && (
+              {(createForm.watch("type") === "CHECKBOX" ||
+                createForm.watch("type") === "RADIO") && (
                 <Controller
                   name="options"
                   control={createForm.control}

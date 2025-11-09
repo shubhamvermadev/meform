@@ -20,6 +20,7 @@ export const ROUTES = {
     FORMS: "/dashboard/forms",
     SCRIPTS: "/dashboard/scripts",
     RESPONSES: "/dashboard/responses",
+    SETTINGS: "/dashboard/settings",
   },
   // API
   API: {
@@ -51,6 +52,8 @@ export const ROUTES = {
     V1: "/public/v1",
     CONFIG: "/public/v1/config",
     SUBMIT: "/public/v1/submit",
+    FORM: (formId: string) => `/public/forms/${formId}`,
+    FORM_PAGE: (formId: string) => `/public/forms/${formId}`,
   },
   // CDN
   CDN: {
@@ -112,7 +115,17 @@ export const FIELD_TYPES = {
   PHONE: "PHONE",
   NUMBER: "NUMBER",
   CHECKBOX: "CHECKBOX",
+  RADIO: "RADIO",
 } as const;
 
 export type FieldType = (typeof FIELD_TYPES)[keyof typeof FIELD_TYPES];
+
+export const SECTION_ID_PREFIX = "meform" as const;
+
+export const APPLICATION_STATUS = {
+  ACTIVE: "ACTIVE",
+  DISABLED: "DISABLED",
+} as const;
+
+export type ApplicationStatus = (typeof APPLICATION_STATUS)[keyof typeof APPLICATION_STATUS];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { useApplications } from "@/hooks/use-applications";
 
 interface AppContextType {
@@ -20,8 +20,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applications, selectedAppId]);
 
+  // Memoize setSelectedAppId to prevent unnecessary re-renders
+  const handleSetSelectedAppId = useCallback((id: string) => {
+    setSelectedAppId(id);
+  }, []);
+
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      selectedAppId,
+      setSelectedAppId: handleSetSelectedAppId,
+    }),
+    [selectedAppId, handleSetSelectedAppId]
+  );
+
   return (
-    <AppContext.Provider value={{ selectedAppId, setSelectedAppId }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );
@@ -34,4 +48,6 @@ export function useAppContext() {
   }
   return context;
 }
+
+
 

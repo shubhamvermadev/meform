@@ -10,6 +10,7 @@ import {
   corsPreflightResponse,
 } from "@/lib/api-response";
 import { PublicSubmitRequestSchema, PublicSubmitResponseSchema, ERROR_CODES } from "@meform/dto";
+import { createHmacSignature } from "@meform/utils";
 import { nanoid } from "nanoid";
 
 /**
@@ -61,11 +62,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if application is disabled or deleted
+    if (application.status === "DISABLED" || application.deletedAt) {
+      return addCorsHeaders(
+        errorResponse(ERROR_CODES.RESOURCE_ACCESS_DENIED, "Application is disabled", 403)
+      );
+    }
+
     const form = await prisma.form.findUnique({
       where: { id: formId },
+      include: {
+        googleSheets: true,
+      },
     });
 
-    if (!form || form.applicationId !== applicationId) {
+    if (!form || form.applicationId !== applicationId || form.deletedAt) {
       return addCorsHeaders(errorResponse(ERROR_CODES.RESOURCE_NOT_FOUND, "Form not found", 404));
     }
 
@@ -77,10 +88,22 @@ export async function POST(request: NextRequest) {
         hostname,
         path,
         payload,
+        integrationStatus: "PENDING",
+        integrationAttemptCount: 0,
       },
     });
 
     logger.info("Submission created", { submissionId: submission.id });
+
+    // Handle Google Sheets integration asynchronously
+    if (form.googleSheets?.enabled && form.googleSheets.webAppUrl) {
+      // Don't await - process in background
+      processGoogleSheetsIntegration(submission.id, form, application, hostname, path, payload).catch(
+        (error) => {
+          logger.error("Google Sheets integration error", { submissionId: submission.id, error });
+        }
+      );
+    }
 
     const response = PublicSubmitResponseSchema.parse({
       id: submission.id,
@@ -92,4 +115,165 @@ export async function POST(request: NextRequest) {
     logger.error("Submit error", error);
     return addCorsHeaders(errorResponse(ERROR_CODES.INTERNAL_ERROR, "Internal server error", 500));
   }
+}
+
+/**
+ * Processes Google Sheets integration with retries
+ */
+async function processGoogleSheetsIntegration(
+  submissionId: string,
+  form: { id: string; googleSheets: { sheetName: string; webAppUrl: string } | null },
+  application: { id: string; integrationSecret: string | null },
+  hostname: string,
+  path: string,
+  payload: Record<string, unknown>
+): Promise<void> {
+  if (!form.googleSheets?.webAppUrl) {
+    return;
+  }
+
+  // Check if integration secret exists
+  if (!application.integrationSecret || application.integrationSecret.trim() === "") {
+    const error = "Integration secret is not configured";
+    logger.error("Google Sheets integration failed: missing secret", {
+      submissionId,
+      applicationId: application.id,
+    });
+    await prisma.submission.update({
+      where: { id: submissionId },
+      data: {
+        integrationStatus: "FAILED",
+        integrationAttemptCount: 0,
+        integrationLastError: error,
+      },
+    });
+    return;
+  }
+
+  const integrationData = {
+    sheetName: form.googleSheets.sheetName,
+    applicationId: application.id,
+    formId: form.id,
+    hostname,
+    path,
+    createdAt: new Date().toISOString(),
+    payload,
+  };
+
+  const bodyString = JSON.stringify(integrationData);
+  let signature: string;
+  try {
+    signature = createHmacSignature(application.integrationSecret, bodyString);
+  } catch (error) {
+    const errorMsg = `Failed to create signature: ${error instanceof Error ? error.message : String(error)}`;
+    logger.error("Google Sheets integration failed: signature creation error", {
+      submissionId,
+      applicationId: application.id,
+      error: errorMsg,
+    });
+    await prisma.submission.update({
+      where: { id: submissionId },
+      data: {
+        integrationStatus: "FAILED",
+        integrationAttemptCount: 0,
+        integrationLastError: errorMsg,
+      },
+    });
+    return;
+  }
+
+  const maxAttempts = 3;
+  let lastError: string | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const response = await fetch(form.googleSheets.webAppUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Meform-App-Id": application.id,
+          "X-Meform-Form-Id": form.id,
+          "X-Meform-Signature": signature,
+        },
+        body: bodyString,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Update submission with success
+          await prisma.submission.update({
+            where: { id: submissionId },
+            data: {
+              integrationStatus: "SUCCESS",
+              integrationAttemptCount: attempt,
+              integrationLastError: null,
+            },
+          });
+
+          // Update Google Sheets integration last attempt
+          await prisma.googleSheetsIntegration.updateMany({
+            where: { formId: form.id },
+            data: {
+              lastAttemptAt: new Date(),
+              lastError: null,
+            },
+          });
+
+          logger.info("Google Sheets integration successful", { submissionId, attempt });
+          return;
+        } else {
+          throw new Error(result.error || "Integration returned success: false");
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+      logger.warn("Google Sheets integration attempt failed", {
+        submissionId,
+        attempt,
+        error: lastError,
+      });
+
+      // Update submission with attempt count
+      await prisma.submission.update({
+        where: { id: submissionId },
+        data: {
+          integrationAttemptCount: attempt,
+          integrationLastError: lastError,
+        },
+      });
+
+      // Update Google Sheets integration last attempt
+      await prisma.googleSheetsIntegration.updateMany({
+        where: { formId: form.id },
+        data: {
+          lastAttemptAt: new Date(),
+          lastError: lastError,
+        },
+      });
+
+      // Exponential backoff: 500ms, 1500ms
+      if (attempt < maxAttempts) {
+        const delay = attempt === 1 ? 500 : 1500;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  // All attempts failed
+  await prisma.submission.update({
+    where: { id: submissionId },
+    data: {
+      integrationStatus: "FAILED",
+      integrationAttemptCount: maxAttempts,
+      integrationLastError: lastError,
+    },
+  });
+
+  logger.error("Google Sheets integration failed after all retries", {
+    submissionId,
+    error: lastError,
+  });
 }

@@ -31,6 +31,7 @@ export const ApplicationResponseSchema = z.object({
   name: z.string(),
   hostname: z.string(),
   description: z.string().nullable(),
+  status: z.enum(["ACTIVE", "DISABLED"]),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -43,9 +44,24 @@ export const UpdateApplicationRequestSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional().nullable(),
   colorTheme: z.string().optional().nullable(),
+  status: z.enum(["ACTIVE", "DISABLED"]).optional(),
 });
 
 export type UpdateApplicationRequest = z.infer<typeof UpdateApplicationRequestSchema>;
+
+// Disable Application
+export const DisableApplicationRequestSchema = z.object({
+  reason: z.string().optional(),
+});
+
+export type DisableApplicationRequest = z.infer<typeof DisableApplicationRequestSchema>;
+
+// Delete Application
+export const DeleteApplicationRequestSchema = z.object({
+  confirmName: z.string().min(1, "Application name confirmation is required"),
+});
+
+export type DeleteApplicationRequest = z.infer<typeof DeleteApplicationRequestSchema>;
 
 // List Applications
 export const ListApplicationsResponseSchema = z.object({
@@ -53,4 +69,18 @@ export const ListApplicationsResponseSchema = z.object({
 });
 
 export type ListApplicationsResponse = z.infer<typeof ListApplicationsResponseSchema>;
+
+// Update Application Status
+export const UpdateApplicationStatusRequestSchema = z.object({
+  status: z.enum(["ACTIVE", "DISABLED"]),
+});
+
+export type UpdateApplicationStatusRequest = z.infer<typeof UpdateApplicationStatusRequestSchema>;
+
+// Application Secret
+export const ApplicationSecretResponseSchema = z.object({
+  integrationSecret: z.string(),
+});
+
+export type ApplicationSecretResponse = z.infer<typeof ApplicationSecretResponseSchema>;
 
