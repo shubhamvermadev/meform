@@ -1,0 +1,128 @@
+// schema.prisma (MySQL)
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum FieldType {
+  TEXT
+  TEXTAREA
+  EMAIL
+  PHONE
+  NUMBER
+  CHECKBOX
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  applications  Application[]
+
+  @@map("users")
+}
+
+model Application {
+  id           String   @id @default(cuid())
+  ownerId      String
+  name         String
+  hostname     String   // website hostname (e.g. example.com)
+  description  String?
+  colorTheme   String?  // stored palette key if needed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  owner        User     @relation(fields: [ownerId], references: [id])
+  urlRules     UrlRule[]
+  forms        Form[]
+  submissions  Submission[]
+
+  @@unique([ownerId, name]) // app name unique per owner
+  @@index([ownerId])
+  @@map("applications")
+}
+
+model UrlRule {
+  id          String   @id @default(cuid())
+  applicationId String
+  hostname    String           // e.g. example.com
+  pathPattern String           // e.g. /pricing or /blog/* or ^/docs/.*$
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  application Application @relation(fields: [applicationId], references: [id])
+  forms       Form[]
+
+  @@index([applicationId])
+  @@unique([applicationId, hostname, pathPattern])
+  @@map("url_rules")
+}
+
+model Form {
+  id            String   @id @default(cuid())
+  applicationId String
+  name          String
+  urlRuleId     String? // optional; if null, form selectable in widget via rules logic
+  version       Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  application   Application @relation(fields: [applicationId], references: [id])
+  urlRule       UrlRule?    @relation(fields: [urlRuleId], references: [id])
+  fields        FormField[]
+  submissions   Submission[]
+
+  @@index([applicationId])
+  @@unique([applicationId, name, version])
+  @@map("forms")
+}
+
+model FormField {
+  id         String    @id @default(cuid())
+  formId     String
+  name       String          // label
+  key        String          // stable key for payload
+  type       FieldType
+  required   Boolean  @default(false)
+  placeholder String?
+  options    Json?           // for CHECKBOX (list), future select, etc.
+  position   Int      @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  form       Form      @relation(fields: [formId], references: [id])
+
+  @@index([formId])
+  @@unique([formId, key])
+  @@map("form_fields")
+}
+
+// Submission as a JSON document + denormalized helpers
+model Submission {
+  id            String   @id @default(cuid())
+  formId        String
+  applicationId String
+  hostname      String
+  path          String
+  payload       Json     // { key: value } at time of submission (version-safe)
+  createdAt     DateTime @default(now())
+
+  form          Form        @relation(fields: [formId], references: [id])
+  application   Application @relation(fields: [applicationId], references: [id])
+
+  @@index([formId])
+  @@index([applicationId, createdAt])
+  @@map("submissions")
+}
+

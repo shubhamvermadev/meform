@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-dark: #201e1f;
+  --color-accent: #ff4000;
+  --color-accent-soft: #faaa8d;
+  --color-background-soft: #feefdd;
+  --color-info: #50b2c0;
+}
+
+body {
+  color: var(--color-dark);
+  background: var(--color-background-soft);
+}
+

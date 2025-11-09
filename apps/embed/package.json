@@ -1,0 +1,17 @@
+{
+  "name": "embed",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc && node build.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@meform/config": "*",
+    "@meform/utils": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
+
