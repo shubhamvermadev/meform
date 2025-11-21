@@ -48,4 +48,3 @@ export const metadata = {
     follow: false,
   },
 };
-

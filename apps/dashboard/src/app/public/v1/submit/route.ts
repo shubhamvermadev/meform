@@ -182,6 +182,13 @@ async function processGoogleSheetsIntegration(
     return;
   }
 
+  // Include signature in the body (Google Apps Script doesn't expose headers reliably)
+  const integrationDataWithSignature = {
+    ...integrationData,
+    signature,
+  };
+  const bodyStringWithSignature = JSON.stringify(integrationDataWithSignature);
+
   const maxAttempts = 3;
   let lastError: string | null = null;
 
@@ -191,11 +198,8 @@ async function processGoogleSheetsIntegration(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Meform-App-Id": application.id,
-          "X-Meform-Form-Id": form.id,
-          "X-Meform-Signature": signature,
         },
-        body: bodyString,
+        body: bodyStringWithSignature,
       });
 
       if (response.ok) {

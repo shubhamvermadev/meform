@@ -24,11 +24,24 @@ export const GOOGLE_SHEETS_SETUP_GUIDE = `
 
 <pre class="bg-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto mb-4"><code>function doPost(e) {
   try {
+    // Parse the payload
+    const data = JSON.parse(e.postData.contents);
+    
+    // Extract signature from body (Google Apps Script doesn't expose headers reliably)
+    const signature = data.signature;
+    if (!signature) {
+      return ContentService.createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: 'Missing signature' 
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Remove signature from data to get the original payload for verification
+    const { signature: _, ...dataWithoutSignature } = data;
+    const payload = JSON.stringify(dataWithoutSignature);
+    
     // Verify HMAC signature
     const secret = 'YOUR_INTEGRATION_SECRET'; // Replace with your integration secret
-    const signature = e.parameter.signature || e.headers['X-Meform-Signature'];
-    const payload = JSON.stringify(e.postData.contents);
-    
     if (!verifySignature(secret, payload, signature)) {
       return ContentService.createTextOutput(JSON.stringify({ 
         success: false, 
@@ -36,8 +49,7 @@ export const GOOGLE_SHEETS_SETUP_GUIDE = `
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // Parse the payload
-    const data = JSON.parse(e.postData.contents);
+    // Extract form data
     const { sheetName, applicationId, formId, hostname, path, createdAt, payload: formData } = data;
     
     // Get or create the sheet
@@ -73,7 +85,6 @@ export const GOOGLE_SHEETS_SETUP_GUIDE = `
 }
 
 function verifySignature(secret, payload, signature) {
-  const Utilities = GoogleAppsScript.Utilities;
   const computed = Utilities.computeHmacSha256Signature(payload, secret);
   const computedHex = computed.map(b => ('0' + (b & 0xFF).toString(16)).slice(-2)).join('');
   const expected = 'sha256=' + computedHex;
