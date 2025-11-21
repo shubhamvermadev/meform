@@ -43,8 +43,8 @@ export function ApplicationDangerZone({ application }: ApplicationDangerZoneProp
       <Card title={UI_LABELS.DANGER_ZONE}>
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">{UI_LABELS.DELETE_APPLICATION}</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="text-sm font-medium text-dark mb-1">{UI_LABELS.DELETE_APPLICATION}</h3>
+            <p className="text-sm text-gray mb-4">
               {UI_LABELS.CONFIRM_DELETE_APP}
             </p>
             <Button
@@ -80,14 +80,14 @@ export function ApplicationDangerZone({ application }: ApplicationDangerZoneProp
         }}
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-700">{UI_LABELS.CONFIRM_DELETE_APP_NAME}</p>
+          <p className="text-sm text-gray">{UI_LABELS.CONFIRM_DELETE_APP_NAME}</p>
           <TextInput
             value={confirmName}
             onChange={(e) => setConfirmName(e.target.value)}
             placeholder={application.name}
             autoFocus
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray">
             Type <strong>{application.name}</strong> to confirm
           </p>
         </div>

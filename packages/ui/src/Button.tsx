@@ -23,10 +23,10 @@ export const Button: React.FC<ButtonProps> = ({
     "font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variantStyles = {
-    primary: "bg-[#ff4000] hover:bg-[#faaa8d] text-white focus:ring-[#ff4000]",
-    secondary: "bg-[#50b2c0] hover:bg-[#3a9fb0] text-white focus:ring-[#50b2c0]",
-    danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-600",
-    iconButton: "bg-transparent hover:bg-gray-100 text-gray-700 focus:ring-gray-300 rounded-md",
+    primary: "bg-accent hover:bg-[#1557b0] text-white focus:ring-accent shadow-sm",
+    secondary: "bg-white hover:bg-hoverGray text-gray border border-lightGray focus:ring-accent",
+    danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-600 shadow-sm",
+    iconButton: "bg-transparent hover:bg-hoverGray text-gray focus:ring-gray-300 rounded-full",
   };
 
   const sizeStyles = {

@@ -85,7 +85,7 @@ export default function UrlsPage() {
   if (!selectedAppId) {
     return (
       <Card title={UI_LABELS.URL}>
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray">
           Please select an application first
         </div>
       </Card>
@@ -110,25 +110,25 @@ export default function UrlsPage() {
         {isLoading ? (
           <div>Loading...</div>
         ) : urlRules.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No URL rules found</div>
+          <div className="text-center py-8 text-gray">No URL rules found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">ID</th>
-                  <th className="text-left p-2">{UI_LABELS.HOSTNAME}</th>
-                  <th className="text-left p-2">{UI_LABELS.PATH_PATTERN}</th>
-                  <th className="text-left p-2">Actions</th>
+                <tr className="border-b border-lightGray bg-hoverGray">
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">ID</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">{UI_LABELS.HOSTNAME}</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">{UI_LABELS.PATH_PATTERN}</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {urlRules.map((rule) => (
-                  <tr key={rule.id} className="border-b">
-                    <td className="p-2">{rule.id.slice(0, 8)}...</td>
-                    <td className="p-2">{rule.hostname}</td>
-                    <td className="p-2">{rule.pathPattern}</td>
-                    <td className="p-2">
+                  <tr key={rule.id} className="border-b border-lightGray hover:bg-hoverGray">
+                    <td className="p-3 text-sm">{rule.id.slice(0, 8)}...</td>
+                    <td className="p-3 text-sm">{rule.hostname}</td>
+                    <td className="p-3 text-sm">{rule.pathPattern}</td>
+                    <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"

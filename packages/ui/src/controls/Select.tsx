@@ -31,15 +31,15 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={selectId} className="block text-sm font-medium text-gray mb-1.5">
           {label}
         </label>
       )}
       <select
         id={selectId}
-        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b2c0] ${
-          error ? "border-red-500" : "border-gray-300"
-        } ${className}`}
+        className={`w-full px-4 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent ${
+          error ? "border-red-500" : "border-lightGray"
+        } text-sm bg-white ${className}`}
         aria-invalid={error ? "true" : "false"}
         aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
         {...props}
@@ -61,7 +61,7 @@ export const Select: React.FC<SelectProps> = ({
         </p>
       )}
       {helperText && !error && (
-        <p id={`${selectId}-helper`} className="mt-1 text-sm text-gray-500">
+        <p id={`${selectId}-helper`} className="mt-1.5 text-xs text-gray">
           {helperText}
         </p>
       )}

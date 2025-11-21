@@ -30,10 +30,10 @@ export default async function PublicFormPageRoute({ params }: PageProps) {
     form.application.deletedAt
   ) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-backgroundSoft">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Form Not Found</h1>
-          <p className="text-gray-600">This form is not available or has been disabled.</p>
+          <h1 className="text-2xl font-bold text-dark mb-2">Form Not Found</h1>
+          <p className="text-gray">This form is not available or has been disabled.</p>
         </div>
       </div>
     );

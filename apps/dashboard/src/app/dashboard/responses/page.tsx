@@ -47,7 +47,7 @@ export default function ResponsesPage() {
   if (!selectedAppId) {
     return (
       <Card title={UI_LABELS.VISITOR_RESPONSES}>
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray">
           Please select an application first
         </div>
       </Card>
@@ -83,40 +83,40 @@ export default function ResponsesPage() {
       }
     >
       {!selectedFormId ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray">
           {forms.length === 0 ? "No forms found" : "Please select a form"}
         </div>
       ) : isLoading ? (
-        <div>Loading...</div>
+        <div className="text-center py-8 text-gray">Loading...</div>
       ) : submissions.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">No submissions found</div>
+        <div className="text-center py-8 text-gray">No submissions found</div>
       ) : (
         <>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b bg-gray-50">
+                <tr className="border-b bg-hoverGray">
                   {formFields.map((field) => (
-                    <th key={field.id} className="text-left p-2 font-medium">
+                    <th key={field.id} className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">
                       {field.name}
                     </th>
                   ))}
-                  <th className="text-left p-2 font-medium">Hostname</th>
-                  <th className="text-left p-2 font-medium">Path</th>
-                  <th className="text-left p-2 font-medium">Created At</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">Hostname</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">Path</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">Created At</th>
                 </tr>
               </thead>
               <tbody>
-                {submissions.map((submission) => (
-                  <tr key={submission.id} className="border-b hover:bg-gray-50">
+            {submissions.map((submission) => (
+              <tr key={submission.id} className="border-b border-lightGray hover:bg-hoverGray">
                     {formFields.map((field) => (
-                      <td key={field.id} className="p-2">
+                      <td key={field.id} className="p-3 text-sm">
                         {formatPayloadValue(submission.payload[field.key])}
                       </td>
                     ))}
-                    <td className="p-2">{submission.hostname}</td>
-                    <td className="p-2">{submission.path}</td>
-                    <td className="p-2">
+                    <td className="p-3 text-sm">{submission.hostname}</td>
+                    <td className="p-3 text-sm">{submission.path}</td>
+                    <td className="p-3 text-sm">
                       {new Date(submission.createdAt).toLocaleString()}
                     </td>
                   </tr>
@@ -126,7 +126,7 @@ export default function ResponsesPage() {
           </div>
           {meta && (
             <div className="mt-4 flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray">
                 Page {meta.page} of {meta.totalPages} ({meta.total} total)
               </div>
               <div className="flex gap-2">

@@ -147,7 +147,7 @@ export default function FormsPage() {
   if (!selectedAppId) {
     return (
       <Card title={UI_LABELS.FORMS}>
-        <div className="text-center py-8 text-gray-500">Please select an application first</div>
+        <div className="text-center py-8 text-gray">Please select an application first</div>
       </Card>
     );
   }
@@ -181,26 +181,26 @@ export default function FormsPage() {
         {isLoading ? (
           <div>Loading...</div>
         ) : forms.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No forms found</div>
+          <div className="text-center py-8 text-gray">No forms found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">ID</th>
-                  <th className="text-left p-2">{UI_LABELS.NAME}</th>
-                  <th className="text-left p-2">Fields</th>
-                  <th className="text-left p-2">Actions</th>
-                  <th className="text-left p-2">Danger</th>
+                <tr className="border-b border-lightGray bg-hoverGray">
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">ID</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">{UI_LABELS.NAME}</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">Fields</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">Actions</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">Danger</th>
                 </tr>
               </thead>
               <tbody>
                 {forms.map((form) => (
-                  <tr key={form.id} className="border-b">
-                    <td className="p-2">{form.id.slice(0, 8)}...</td>
-                    <td className="p-2">{form.name}</td>
-                    <td className="p-2">{form._count?.fields || 0}</td>
-                    <td className="p-2">
+                  <tr key={form.id} className="border-b border-lightGray hover:bg-hoverGray">
+                    <td className="p-3 text-sm">{form.id.slice(0, 8)}...</td>
+                    <td className="p-3 text-sm">{form.name}</td>
+                    <td className="p-3 text-sm">{form._count?.fields || 0}</td>
+                    <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
@@ -378,10 +378,10 @@ export default function FormsPage() {
                     {/* <span>{UI_LABELS.COPY}</span> */}
                   </Button>
                 </div>
-                <div className="bg-gray-50 p-3 rounded text-sm font-mono text-gray-700">
+                <div className="bg-hoverGray p-3 rounded text-sm font-mono text-dark">
                   <div className="mb-2">Usage:</div>
                   <div className="mb-1">{`<div id="${editingForm ? computedSectionId : selectedAppId ? buildSectionId(selectedAppId, createForm.watch("name") || "") : ""}"></div>`}</div>
-                  <div className="mt-2 text-xs text-gray-500">or</div>
+                  <div className="mt-2 text-xs text-gray">or</div>
                   <div className="mt-1">{`<div data-meform="app:${selectedAppId};form:${editingForm?.id || ""}"></div>`}</div>
                 </div>
                 <Controller

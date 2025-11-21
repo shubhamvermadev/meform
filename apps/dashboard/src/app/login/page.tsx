@@ -45,7 +45,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-backgroundSoft">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-sm border border-lightGray">
         <h1 className="text-3xl font-bold text-center mb-8 text-dark">meform</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -69,7 +69,7 @@ export default function LoginPage() {
         </form>
         <p className="mt-4 text-center text-sm">
           Don't have an account?{" "}
-          <a href="/register" className="text-info hover:underline">
+          <a href="/register" className="text-accent hover:underline">
             Register
           </a>
         </p>

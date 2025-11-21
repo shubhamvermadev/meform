@@ -271,7 +271,7 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
   if (!selectedAppId || !formId) {
     return (
       <Card title={UI_LABELS.FIELDS}>
-        <div className="text-center py-8 text-gray-500">Loading...</div>
+        <div className="text-center py-8 text-gray">Loading...</div>
       </Card>
     );
   }
@@ -306,29 +306,29 @@ export default function FormFieldsPage({ params }: { params: { formId: string } 
         {isLoading ? (
           <div>Loading...</div>
         ) : fields.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No fields found</div>
+          <div className="text-center py-8 text-gray">No fields found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">ID</th>
-                  <th className="text-left p-2">{UI_LABELS.NAME}</th>
-                  <th className="text-left p-2">{UI_LABELS.KEY}</th>
-                  <th className="text-left p-2">{UI_LABELS.FIELD_TYPE}</th>
-                  <th className="text-left p-2">{UI_LABELS.REQUIRED}</th>
-                  <th className="text-left p-2">Actions</th>
+                <tr className="border-b border-lightGray bg-hoverGray">
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">ID</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">{UI_LABELS.NAME}</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">{UI_LABELS.KEY}</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">{UI_LABELS.FIELD_TYPE}</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">{UI_LABELS.REQUIRED}</th>
+                  <th className="text-left p-3 text-xs font-medium text-gray uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {fields.map((field) => (
-                  <tr key={field.id} className="border-b">
-                    <td className="p-2">{field.id.slice(0, 8)}...</td>
-                    <td className="p-2">{field.name}</td>
-                    <td className="p-2">{field.key}</td>
-                    <td className="p-2">{field.type}</td>
-                    <td className="p-2">{field.required ? "Yes" : "No"}</td>
-                    <td className="p-2">
+                  <tr key={field.id} className="border-b border-lightGray hover:bg-hoverGray">
+                    <td className="p-3 text-sm">{field.id.slice(0, 8)}...</td>
+                    <td className="p-3 text-sm">{field.name}</td>
+                    <td className="p-3 text-sm">{field.key}</td>
+                    <td className="p-3 text-sm">{field.type}</td>
+                    <td className="p-3 text-sm">{field.required ? "Yes" : "No"}</td>
+                    <td className="p-3">
                       <div className="flex items-center gap-4">
                         <Button
                           size="sm"

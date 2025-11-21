@@ -23,7 +23,7 @@ export default function ScriptsPage() {
   if (!selectedAppId) {
     return (
       <Card title={UI_LABELS.SCRIPTS}>
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray">
           Please select an application first
         </div>
       </Card>
@@ -33,10 +33,10 @@ export default function ScriptsPage() {
   return (
     <Card title={UI_LABELS.SCRIPTS}>
       <div className="space-y-4">
-        <p className="text-gray-600">
+        <p className="text-gray">
           Add this script tag to your website to enable the meform widget.
         </p>
-        <div className="bg-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto relative">
+        <div className="bg-hoverGray p-4 rounded-lg font-mono text-sm overflow-x-auto relative">
           <pre className="whitespace-pre-wrap">{scriptTag}</pre>
         </div>
         <Button 
@@ -56,10 +56,10 @@ export default function ScriptsPage() {
             </>
           )}
         </Button>
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+        <div className="mt-6 p-4 bg-accentSoft rounded-lg">
           <h3 className="font-semibold mb-2">How it works:</h3>
-          <p className="text-sm text-gray-700 mb-2">{UI_DESCRIPTIONS.SCRIPT_EXPLANATION}</p>
-          <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+          <p className="text-sm text-gray mb-2">{UI_DESCRIPTIONS.SCRIPT_EXPLANATION}</p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-gray">
             <li>The script automatically detects the current hostname and path</li>
             <li>It matches against your URL rules to determine which form to show</li>
             <li>Forms are displayed in a floating widget on your site</li>

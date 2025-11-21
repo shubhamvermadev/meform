@@ -42,11 +42,11 @@ export function ApplicationSecretCard({ applicationId }: ApplicationSecretCardPr
   return (
     <Card title="Integration Secret">
       <div className="space-y-4">
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray mb-4">
           This secret is used to sign requests to external integrations like Google Sheets. Keep it secure.
         </p>
         <div className="flex items-center gap-2">
-          <div className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg font-mono text-sm">
+          <div className="flex-1 px-3 py-2 bg-hoverGray border border-lightGray rounded-md font-mono text-sm">
             {isVisible ? secretData?.integrationSecret || "Loading..." : maskedSecret}
           </div>
           <Button

@@ -16,6 +16,13 @@ module.exports = {
         accentSoft: PALETTE.accentSoft,
         backgroundSoft: PALETTE.backgroundSoft,
         info: PALETTE.info,
+        gray: PALETTE.gray,
+        lightGray: PALETTE.lightGray,
+        hoverGray: PALETTE.hoverGray,
+        white: PALETTE.white,
+      },
+      fontFamily: {
+        sans: ['Roboto', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
     },
   },

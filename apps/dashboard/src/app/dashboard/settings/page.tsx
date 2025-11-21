@@ -32,7 +32,7 @@ export default function SettingsPage() {
   if (!selectedAppId) {
     return (
       <Card title={UI_LABELS.SETTINGS}>
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray">
           Please select an application first
         </div>
       </Card>
@@ -42,7 +42,7 @@ export default function SettingsPage() {
   if (isLoading) {
     return (
       <Card title={UI_LABELS.SETTINGS}>
-        <div className="text-center py-8 text-gray-500">Loading...</div>
+        <div className="text-center py-8 text-gray">Loading...</div>
       </Card>
     );
   }
@@ -50,7 +50,7 @@ export default function SettingsPage() {
   if (!application) {
     return (
       <Card title={UI_LABELS.SETTINGS}>
-        <div className="text-center py-8 text-gray-500">Application not found</div>
+        <div className="text-center py-8 text-gray">Application not found</div>
       </Card>
     );
   }

@@ -26,8 +26,8 @@ export const Textarea: React.FC<TextareaProps> = ({
       )}
       <textarea
         id={textareaId}
-        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b2c0] ${
-          error ? "border-red-500" : "border-gray-300"
+        className={`w-full px-4 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-sm ${
+          error ? "border-red-500" : "border-lightGray"
         } ${className}`}
         {...props}
       />

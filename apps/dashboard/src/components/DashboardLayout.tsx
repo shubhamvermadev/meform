@@ -46,15 +46,16 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-backgroundSoft">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div className="text-2xl font-bold text-dark">meform</div>
+    <div className="min-h-screen bg-white">
+      {/* Header - Gmail style */}
+      <header className="bg-white border-b border-lightGray px-4 py-2 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
+          <div className="text-xl font-medium text-dark">meform</div>
+          <div className="h-6 w-px bg-lightGray"></div>
           <select
             value={selectedAppId}
             onChange={(e) => setSelectedAppId(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg"
+            className="px-3 py-1.5 border border-lightGray rounded-md text-sm text-gray bg-white hover:bg-hoverGray focus:outline-none focus:ring-2 focus:ring-accent"
           >
             {applications.map((app) => (
               <option key={app.id} value={app.id}>
@@ -62,19 +63,21 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
               </option>
             ))}
           </select>
+        </div>
+        <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" onClick={() => setIsCreateDialogOpen(true)}>
             {UI_LABELS.CREATE_APPLICATION}
           </Button>
-          <Button variant="danger" size="sm" onClick={handleLogout}>
+          <Button variant="secondary" size="sm" onClick={handleLogout}>
             Logout
           </Button>
         </div>
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-[350px] bg-white border-r border-gray-200 min-h-[calc(100vh-73px)]">
-          <nav className="p-4 space-y-2">
+        {/* Sidebar - Gmail style */}
+        <aside className="w-[240px] bg-white border-r border-lightGray min-h-[calc(100vh-49px)]">
+          <nav className="p-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.path;
@@ -85,10 +88,10 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center gap-4 px-3 py-2.5 rounded-r-full transition-colors text-sm ${
                     isActive
-                      ? "bg-accent text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-accentSoft text-accent font-medium"
+                      : "text-gray hover:bg-hoverGray"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -99,8 +102,8 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
           </nav>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">{children}</main>
+        {/* Main Content - Gmail style */}
+        <main className="flex-1 bg-backgroundSoft min-h-[calc(100vh-49px)] p-6">{children}</main>
       </div>
       <ApplicationCreateDialog
         open={isCreateDialogOpen}

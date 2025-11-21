@@ -131,7 +131,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -140,17 +140,17 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-lightGray"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-start justify-between">
+        <div className="px-6 py-4 border-b border-lightGray flex items-start justify-between">
           <div className="flex-1">
-            <h2 id="modal-title" className="text-lg font-semibold text-gray-900">
+            <h2 id="modal-title" className="text-base font-medium text-dark">
               {title}
             </h2>
             {description && (
-              <p id="modal-description" className="mt-1 text-sm text-gray-500">
+              <p id="modal-description" className="mt-1 text-sm text-gray">
                 {description}
               </p>
             )}
@@ -172,7 +172,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         {(primaryAction || secondaryAction) && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+          <div className="px-6 py-4 border-t border-lightGray flex items-center justify-end gap-3">
             {secondaryAction && (
               <Button
                 variant="secondary"

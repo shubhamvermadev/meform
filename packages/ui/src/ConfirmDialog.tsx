@@ -45,7 +45,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         variant: "outline",
       }}
     >
-      <p className="text-gray-700">{message}</p>
+      <p className="text-gray">{message}</p>
     </Modal>
   );
 };

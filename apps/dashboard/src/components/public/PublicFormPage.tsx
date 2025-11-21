@@ -94,7 +94,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
             required={field.required}
             value={(formData[field.key] as string) || ""}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 border border-lightGray rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-sm"
             rows={4}
           />
         );
@@ -107,7 +107,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
             required={field.required}
             value={(formData[field.key] as string) || ""}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 border border-lightGray rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-sm"
           />
         );
       case "PHONE":
@@ -119,7 +119,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
             required={field.required}
             value={(formData[field.key] as string) || ""}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 border border-lightGray rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-sm"
           />
         );
       case "NUMBER":
@@ -131,7 +131,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
             required={field.required}
             value={(formData[field.key] as string) || ""}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 border border-lightGray rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-sm"
           />
         );
       case "CHECKBOX":
@@ -144,7 +144,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
               required={field.required}
               checked={(formData[field.key] as boolean) || false}
               onChange={(e) => handleFieldChange(field.key, e.target.checked ? "true" : "")}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-accent focus:ring-accent border-lightGray rounded"
             />
           );
         }
@@ -164,7 +164,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
                       : current.filter((v) => v !== value);
                     handleFieldChange(field.key, updated);
                   }}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2"
+                  className="h-4 w-4 text-accent focus:ring-accent border-lightGray rounded mr-2"
                 />
                 {label}
               </label>
@@ -182,7 +182,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
               required={field.required}
               checked={(formData[field.key] as string) === "yes"}
               onChange={(e) => handleFieldChange(field.key, e.target.value)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              className="h-4 w-4 text-accent focus:ring-accent border-lightGray"
             />
           );
         }
@@ -197,7 +197,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
                   required={field.required}
                   checked={(formData[field.key] as string) === value}
                   onChange={(e) => handleFieldChange(field.key, e.target.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mr-2"
+                  className="h-4 w-4 text-accent focus:ring-accent border-lightGray mr-2"
                 />
                 {label}
               </label>
@@ -213,7 +213,7 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
             required={field.required}
             value={(formData[field.key] as string) || ""}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2.5 border border-lightGray rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent text-sm"
           />
         );
     }
@@ -221,28 +221,28 @@ export function PublicFormPage({ form }: PublicFormPageProps) {
 
   if (submitStatus === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
-          <div className="text-green-500 text-5xl mb-4">✓</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h1>
-          <p className="text-gray-600">Your submission has been received successfully.</p>
+      <div className="min-h-screen flex items-center justify-center bg-backgroundSoft">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-sm border border-lightGray p-8 text-center">
+          <div className="text-green-600 text-5xl mb-4">✓</div>
+          <h1 className="text-2xl font-bold text-dark mb-2">Thank You!</h1>
+          <p className="text-gray">Your submission has been received successfully.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-backgroundSoft py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">{form.name}</h1>
+        <div className="bg-white rounded-lg shadow-sm border border-lightGray p-8">
+          <h1 className="text-3xl font-bold text-dark mb-6">{form.name}</h1>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Honeypot field */}
             <input type="text" name="dataCheck" tabIndex={-1} autoComplete="off" className="hidden" />
 
             {form.fields.map((field) => (
               <div key={field.id}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray mb-2">
                   {field.name}
                   {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>

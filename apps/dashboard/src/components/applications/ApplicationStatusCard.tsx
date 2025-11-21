@@ -34,9 +34,9 @@ export function ApplicationStatusCard({ application: initialApplication }: Appli
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600 mb-1">{UI_DESCRIPTIONS.APP_STATUS_DISABLED_HELP}</p>
+            <p className="text-sm text-gray mb-1">{UI_DESCRIPTIONS.APP_STATUS_DISABLED_HELP}</p>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-dark">
                 {application.status === "ACTIVE" ? UI_LABELS.APP_STATUS_ACTIVE : UI_LABELS.APP_STATUS_DISABLED}
               </span>
             </div>
@@ -49,7 +49,7 @@ export function ApplicationStatusCard({ application: initialApplication }: Appli
               disabled={updateMutation.isPending}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+            <div className="w-11 h-6 bg-lightGray peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accentSoft rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-lightGray after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
           </label>
         </div>
       </div>

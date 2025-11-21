@@ -3,13 +3,17 @@
  * Vanilla TypeScript embeddable script
  */
 
-// Inline constants (no external dependencies)
+// Inline constants (no external dependencies) - Gmail-inspired
 const PALETTE = {
-  dark: "#201e1f",
-  accent: "#ff4000",
-  accentSoft: "#faaa8d",
-  backgroundSoft: "#feefdd",
-  info: "#50b2c0",
+  dark: "#202124",
+  accent: "#1a73e8",
+  accentSoft: "#e8f0fe",
+  backgroundSoft: "#f8f9fa",
+  info: "#1a73e8",
+  gray: "#5f6368",
+  lightGray: "#dadce0",
+  hoverGray: "#f1f3f4",
+  white: "#ffffff",
 };
 
 // Note: Hostname normalization and path matching are handled server-side

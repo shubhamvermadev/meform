@@ -30,7 +30,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <Card title="Dashboard">
-        <div className="text-center py-8 text-gray-500">Loading...</div>
+        <div className="text-center py-8 text-gray">Loading...</div>
       </Card>
     );
   }
@@ -40,7 +40,7 @@ export default function DashboardPage() {
       <>
         <Card title="Dashboard">
           <div className="text-center py-16">
-            <p className="text-gray-600 mb-6 text-lg">
+            <p className="text-gray mb-6 text-lg">
               {UI_DESCRIPTIONS.EMPTY_STATE_MESSAGE}
             </p>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
